@@ -996,6 +996,8 @@ def main():
                        help='Specify gender')
     parser.add_argument('--cr', choices=CHALLENGE_RATINGS,
                        help='Challenge Rating for stat block generation (e.g. 1/4, 2, 5)')
+    parser.add_argument('--ai', action='store_true',
+                       help='Use AI (Ollama) to generate creative, unique NPCs')
     
     # Group options
     parser.add_argument('--group', '-gr', choices=list(GROUP_TYPES.keys()),
@@ -1041,28 +1043,67 @@ def main():
             print(f"  {category}: {', '.join(jobs)}")
         return
     
+    # Handle AI import if needed
+    if args.ai:
+        try:
+            from ai_npc_generator import generate_ai_npc, generate_ai_group, test_ollama_connection
+            
+            # Test Ollama connection
+            if not test_ollama_connection():
+                print("❌ Cannot connect to Ollama. Please ensure:")
+                print("  1. Ollama is installed and running")
+                print("  2. Your .env file is configured correctly")
+                print("  3. The specified model is available")
+                print("\nFalling back to regular generation...")
+                args.ai = False
+            else:
+                print("✅ Connected to Ollama successfully!")
+                
+        except ImportError as e:
+            print(f"❌ AI dependencies not available: {e}")
+            print("Install required packages:")
+            print("  pip install python-dotenv requests")
+            print("\nFalling back to regular generation...")
+            args.ai = False
+    
     print("Welcome to Mike's D&D NPC Generator!")
+    if args.ai:
+        print("🤖 AI-Powered Mode Enabled!")
     print("=" * 40)
     
     # Generate based on arguments
     if args.group:
         # Generate a group
-        group = generate_group(args.group, args.count, args.job, args.cr)
-        display_group(group)
-        
-        if not args.no_save:
-            npc_id = add_npc_to_collection(None, group)
-            print(f"\n💾 Saved as NPC #{npc_id}")
-            print(f"Use '--view-id {npc_id}' to view again later")
+        if args.ai:
+            group = generate_ai_group(args.group, args.count, args.job, args.cr)
+        else:
+            group = generate_group(args.group, args.count, args.job, args.cr)
+            
+        if group:
+            display_group(group)
+            
+            if not args.no_save:
+                npc_id = add_npc_to_collection(None, group)
+                print(f"\n💾 Saved as NPC #{npc_id}")
+                print(f"Use '--view-id {npc_id}' to view again later")
+        else:
+            print("Failed to generate group. Try again or use regular generation.")
     else:
         # Generate a single NPC
-        npc = generate_npc(job_filter=args.job, gender_filter=args.gender, challenge_rating=args.cr)
-        display_npc(npc)
-        
-        if not args.no_save:
-            npc_id = add_npc_to_collection(npc)
-            print(f"\n💾 Saved as NPC #{npc_id}")
-            print(f"Use '--view-id {npc_id}' to view again later")
+        if args.ai:
+            npc = generate_ai_npc(job_filter=args.job, gender_filter=args.gender, challenge_rating=args.cr)
+        else:
+            npc = generate_npc(job_filter=args.job, gender_filter=args.gender, challenge_rating=args.cr)
+            
+        if npc:
+            display_npc(npc)
+            
+            if not args.no_save:
+                npc_id = add_npc_to_collection(npc)
+                print(f"\n💾 Saved as NPC #{npc_id}")
+                print(f"Use '--view-id {npc_id}' to view again later")
+        else:
+            print("Failed to generate NPC. Try again or use regular generation.")
     
     print("\n" + "=" * 40)
     print("Happy DMing! 🎲")

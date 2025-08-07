@@ -56,6 +56,14 @@ python3 npc_generator.py --job innkeeper
 
 # Generate a female guard
 python3 npc_generator.py --job guard --gender Female
+
+# Generate a NPC with AI (Ollama)
+cp .env.example .env
+# Edit .env with your environment variables and a model that you have on your Ollama server
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python npc_generator.py --ai --job innkeeper --gender Female
 ```
 
 ### Combat-Ready NPCs
