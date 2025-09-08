@@ -35,7 +35,7 @@ A comprehensive D&D 5e (2024) NPC generator that creates rich, detailed characte
 ### Setup
 1. Clone the repository:
 ```bash
-git clone https://github.com/YOUR_USERNAME/dnd-npc-generator.git
+git clone https://github.com/mjmcphee/dnd-npc-generator.git
 cd dnd-npc-generator
 ```
 
